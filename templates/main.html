@@ -17,7 +17,9 @@
         <table cellspacing="40" cellpadding="25" align="center">
           <tr>
             <td><a href="./mypolls/"><img src="/site_media/images/mypolls.png" /></a><br /><b>My Polls</b></td>
+            {% if can_create %}
             <td><a href="./createpoll/"><img src="/site_media/images/create_poll.png" /></a><br /><b>Create Poll</b></td>
+            {% endif %}
           </tr>
         </table>
       </div>

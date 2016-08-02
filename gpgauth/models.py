@@ -9,11 +9,12 @@ class PGPkey(models.Model):
   fingerprint = models.CharField(unique=True, max_length=50)
   renew_passwd = models.CharField(max_length=35)
   is_trusted = models.BooleanField(default=False)
-  
+  can_create = models.BooleanField(default=False)
+
   def __init__(self, *args, **kwargs):
-    super(PGPkey, self).__init__(*args, **kwargs) 
+    super(PGPkey, self).__init__(*args, **kwargs)
     self.clean()
-    
+
   def clean(self):
     gpg = GPG(gpgbinary=settings.GNUPGBINARY, gnupghome=settings.GNUPGHOME)
     key = gpg.get_key(self.fingerprint)
@@ -21,7 +22,11 @@ class PGPkey(models.Model):
       self.is_trusted = True
     else:
       self.is_trusted = False
+    if key['ownertrust'] in settings.CREATE_POLLS:
+      self.can_create = True
+    else:
+      self.can_create = False
     self.save()
-            
+
   def __unicode__(self):
     return self.fingerprint
