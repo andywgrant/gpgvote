@@ -136,5 +136,6 @@ SYSTEM_KEY_FINGERPRINT = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' # key of the
 SYSTEM_KEY_PASSWD = 'somepass' # Since this is secret, you MUST make this file readable ONLY by trusted users
                                # and, of course, make sure it is NOT accessible from the web clients
 TRUST_LEVELS = ('f', 'u') # Trust only f-ully trusted and u-ltimately trusted keys
+CREATE_POLLS = ('u') # Only u-ltimately trusted keys can create polls
 POLL_START_TIME_THRESHOLD = 5 # in minutes
 POLL_MIN_DURATION = 60 # in minutes

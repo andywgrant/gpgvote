@@ -74,6 +74,11 @@ def poll(request, action, poll_id):
   else:
     logged_in = True
 
+  # Update can_create and check
+  request.user.pgpkey.clean()
+  if not request.user.pgpkey.can_create:
+    return HttpResponseRedirect('/')
+
   choices_error = ''
   dates_error = ''
   num_of_choices_error = ''
