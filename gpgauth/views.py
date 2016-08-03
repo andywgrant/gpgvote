@@ -6,8 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import validate_email
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from gpgvote.gpgauth.forms import RegisterForm, RenewForm, LoginForm
-from gpgvote.gpgauth.models import PGPkey
+from gpgauth.forms import RegisterForm, RenewForm, LoginForm
+from gpgauth.models import PGPkey
 from gnupg import GPG
 from hashlib import md5
 
@@ -17,7 +17,7 @@ def delete_keys(gpg, fingerprints, del_existed=False):
   # Make sure that fingerprint is a list
   if type(fingerprints).__name__ != 'list':
     fingerprints = [fingerprints]
-    
+
   for fp in fingerprints:
     # Delete key only if it does not exist in database or del_existed is True
     try:
@@ -27,7 +27,7 @@ def delete_keys(gpg, fingerprints, del_existed=False):
     except ObjectDoesNotExist:
       gpg.delete_keys(fp)
 
-    
+
 def key_import(gpg, keyfile):
   if keyfile.size > 100000: # accept files of a normal size
     error = 'Key file size is too big'
@@ -38,14 +38,14 @@ def key_import(gpg, keyfile):
     except UnicodeDecodeError:
       error = 'There was an error in importing your key'
       return error, None
-      
+
     if import_result.count == 0:
       error = 'There was an error in importing your key'
-		
+
     if import_result.count > 1: # accept only single-key files
       error = 'Your key file includes more than one keys'
       delete_keys(gpg, import_result.fingerprints)
-	  
+
     if import_result.count == 1:
       fp = import_result.fingerprints[0]
       if gpg.key_is_expired(fp):
@@ -53,9 +53,9 @@ def key_import(gpg, keyfile):
         delete_keys(gpg, import_result.fingerprints)
       else:
 	return error, gpg.get_key(fp)
-        
+
   return error, None
-  
+
 def login_common_checks(username):
   try:
     user = User.objects.get(username = username)
@@ -67,7 +67,7 @@ def login_common_checks(username):
 	  error = False
         else:
           error = 'PGP key for user \'%s\' is not trusted (yet)' % username
-      else: 
+      else:
         error = 'PGP key for user \'%s\' has expired' % username
     else:
       error = 'Account for user \'%s\' is disabled' % username
@@ -76,7 +76,7 @@ def login_common_checks(username):
     error = 'User \'%s\' does not exist' % username
     user = None
     gpg = None
-    
+
   return user, error, gpg
 
 
@@ -98,10 +98,10 @@ def register(request):
         try:
 	  user = User.objects.get(email = imported_key['email'])
 	  error = 'User \'%s\' is already registered' % imported_key['email']
-	  if user.pgpkey.fingerprint != imported_key['fingerprint']: 
+	  if user.pgpkey.fingerprint != imported_key['fingerprint']:
 	    delete_keys(gpg, imported_key['fingerprint'])
         except ObjectDoesNotExist:
-          newuser = User.objects.create_user(username = imported_key['email'], 
+          newuser = User.objects.create_user(username = imported_key['email'],
 	                                        email = imported_key['email'],
 	                                     password = '')
 	  newuser.set_unusable_password()
@@ -109,13 +109,13 @@ def register(request):
 	  pgpkey = PGPkey(user = newuser, name = imported_key['name'], fingerprint = imported_key['fingerprint'])
 	  pgpkey.save()
 	  success = 'You are now registered'
-  
+
   else:
     form = RegisterForm()
-    
-  return render_to_response('register.html', 
-         {    'form': form, 
-             'error': error, 
+
+  return render_to_response('register.html',
+         {    'form': form,
+             'error': error,
            'success': success }, context_instance = RequestContext(request))
 
 
@@ -134,7 +134,7 @@ def renew(request, username):
        error = 'Your key is not expired yet'
     if error.endswith('expired'):
       error = ''
-    
+
   if request.POST:
     form = RenewForm(request.POST, request.FILES)
     if form.is_valid():
@@ -163,7 +163,7 @@ def renew(request, username):
 	     update_user = True
 	  except:
 	     update_user = True
-	  
+
 	  if update_user:
 	    delete_keys(gpg, user.pgpkey.fingerprint, del_existed=True)
 	    user.pgpkey.fingerprint = imported_key['fingerprint']
@@ -173,13 +173,13 @@ def renew(request, username):
 	    user.email = imported_key['email']
 	    user.save()
             success = 'Your key was successfuly renewed'
-            
+
   else:
     form = RenewForm()
-  
+
   return render_to_response('renew.html',
-         {     'form': form, 
-              'error': error, 
+         {     'form': form,
+              'error': error,
             'success': success,
            'username': username }, context_instance = RequestContext(request))
 
@@ -188,7 +188,7 @@ def login_view(request):
   if request.user.is_authenticated():
     return HttpResponseRedirect('/')
   error = ''
-  password = ''    
+  password = ''
   try:
     goto_stage = request.POST['stage']
   except:
@@ -217,7 +217,7 @@ def login_view(request):
 	  return redirect('/renew/%s' % request.POST['username'])
 	else:
 	  pass
-	  
+
     elif goto_stage == 'afterpass':
       if form.is_valid():
 	# Run common checks again to disappoint those who try to bypass first login step
@@ -235,16 +235,16 @@ def login_view(request):
       else:
         error = 'Invalid username or password'
         goto_stage = 'password'
-      
+
   else:
     form = LoginForm()
-    
-  return render_to_response('login.html', {       'form': form, 
-                                            'goto_stage': goto_stage, 
-                                                 'error': error, 
+
+  return render_to_response('login.html', {       'form': form,
+                                            'goto_stage': goto_stage,
+                                                 'error': error,
                                               'password': password   }, context_instance = RequestContext(request))
-                                              
-                                              
+
+
 def logout_view(request):
   logout(request)
   return HttpResponseRedirect('/')

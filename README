@@ -21,8 +21,8 @@ https://github.com/Ernest0x/gpgvote/raw/master/docs/thesis.pdf
 
 Prerequisites:
 --------------
-Django (of course): Tested with 1.2.1 and 1.2.3
-python-gnupg: Patched with my patches found on issues 13 and 15 
+Django (of course): Tested with 1.9.8
+python-gnupg: Patched with my patche found on issue 13 
               (see: http://code.google.com/p/python-gnupg/issues/)
 django-gpgauth: Included
 
