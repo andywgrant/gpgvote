@@ -31,7 +31,7 @@ urlpatterns = [
     # Example:
     # (r'^gpgvote/', include('gpgvote.foo.urls')),
     url(r'^site_media/(?P<path>.*)$', serve,
-    {'document_root': '/path/to/gpgvote/templates/media'}),
+    {'document_root': 'templates/media'}),
     url(r'^captcha/', include('captcha.urls')),
     url(r'^$', views.main),
     url(r'^userinfo/(?P<user_id>\d+)/$', views.userinfo),
