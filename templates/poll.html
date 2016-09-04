@@ -3,10 +3,16 @@
 {% block title %}Create Poll{% endblock %}
 
 {% block content %}
+      {% if action == "add_voters" %}
+      <h2>Edit your Poll:</h2>
+      {% else %}
       <h2>{{ action|capfirst }} your Poll:</h2>
+      {% endif %}
       {% if not success %}
       {% if action == "create" %}
       <form action="/createpoll/" method="post">
+      {% elif action == "add_voters" %}
+      <form action="/add_voters/{{ poll_id }}/" method="post">
       {% else %}
       <form action="/editpoll/{{ poll_id }}/" method="post">
       {% endif %}
@@ -83,7 +89,11 @@
            <tr><td colspan="2"><hr /></td></tr>
         </table>
         <div align="center">
+          {% if action == "add_voters" %}
+          <input style="font-size: large; font-weight: bold" type="submit" value="Edit Poll" onclick="selectChoices('all', 'id_choices')" />
+          {% else %}
           <input style="font-size: large; font-weight: bold" type="submit" value="{{ action|capfirst }} Poll" onclick="selectChoices('all', 'id_choices')" />
+          {% endif %}
         </div>
       </form>
       {% else %}

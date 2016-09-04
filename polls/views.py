@@ -104,6 +104,23 @@ def poll(request, action, poll_id):
                     'ends_time': poll.ends.time()   }
     poll_choices = Choice.objects.filter(poll = poll).order_by('id')
 
+  if action == 'add_voters':
+    try:
+      poll = Poll.objects.get(pk = poll_id)
+    except Poll.DoesNotExist:
+      raise Http404
+    # allow adding voters only for creator
+    if (request.user != poll.creator):
+      return HttpResponseRedirect('/')
+    poll_data = {    'question': poll.question,
+                  'min_choices': poll.min_choices,
+                  'max_choices': poll.max_choices,
+                  'starts_date': poll.starts.date(),
+                  'starts_time': poll.starts.time(),
+                    'ends_date': poll.ends.date(),
+                    'ends_time': poll.ends.time()   }
+    poll_choices = Choice.objects.filter(poll = poll).order_by('id')
+
   # Clean PGPkey records to correct is_trusted field
   for key in PGPkey.objects.all():
     key.clean()
@@ -128,7 +145,7 @@ def poll(request, action, poll_id):
       else:
 	for choice in poll_choices:
 	  if len(choice) > 255:
-	    choices_error = '<ul><li>Each choice must be up to 255 characters in length</li></ul>'
+	    choices_error = '<ul><li>Each choice can be up to 255 characters in length</li></ul>'
 
       (dates_error, starts_datetime, ends_datetime) = dates_check(
                                                         form.cleaned_data['starts_date'],
@@ -152,14 +169,14 @@ def poll(request, action, poll_id):
 	           who_voted = '',
 	           starts = starts_datetime,
 	           ends = ends_datetime )
-	else:
+	elif action != 'add_voters':
 	  poll.question = form.cleaned_data['question']
 	  poll.min_choices = form.cleaned_data['min_choices']
 	  poll.max_choices = form.cleaned_data['max_choices']
-	  poll.allowed_voters = ''
           poll.starts = starts_datetime
 	  poll.ends = ends_datetime
 
+	poll.allowed_voters = ''
 	for voter in form.cleaned_data['allowed_voters']:
 	  poll.add_voter(voter, To = 'allowed_voters')
         poll.save()
@@ -167,9 +184,10 @@ def poll(request, action, poll_id):
         # Delete old choices before adding their new versions
         if action == 'edit':
           Choice.objects.filter(poll = poll).delete()
-        for choice in poll_choices:
-	  choice = Choice(poll = poll, choice = choice)
-	  choice.save()
+        if action != 'add_voters':
+          for choice in poll_choices:
+	    choice = Choice(poll = poll, choice = choice)
+	    choice.save()
 
         if action == 'create':
 	  success = 'You have successfully created a new poll'
@@ -178,7 +196,7 @@ def poll(request, action, poll_id):
   else:
     form = PollForm(allowed_voters, initial = poll_data)
 
-  if action == 'edit':
+  if action == 'edit' or action == 'add_voters':
     poll_id = poll.id
   else:
     poll_id = ''
@@ -201,6 +219,9 @@ def createpoll(request):
 
 def editpoll(request, poll_id):
   return poll(request, 'edit', poll_id)
+
+def add_voters(request, poll_id):
+  return poll(request, 'add_voters', poll_id)
 
 def deletepoll(request, poll_id):
   if not request.user.is_authenticated():
@@ -489,3 +510,5 @@ def voters_list(request, poll_id):
                                   'poll': poll,
                                 'voters': voters,
                              'logged_in': logged_in }, context_instance = RequestContext(request))
+
+

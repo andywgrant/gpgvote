@@ -41,6 +41,7 @@ urlpatterns = [
     url(r'^logout/$', gpgauth.views.logout_view),
     url(r'^createpoll/$', polls.views.createpoll),
     url(r'^editpoll/(?P<poll_id>\d+)/$', polls.views.editpoll),
+    url(r'^add_voters/(?P<poll_id>\d+)/$', polls.views.add_voters),
     url(r'^deletepoll/(?P<poll_id>\d+)/$', polls.views.deletepoll),
     url(r'^mypolls/$', polls.views.mypolls),
     url(r'^voters_list/(?P<poll_id>\d+)/$', polls.views.voters_list),
