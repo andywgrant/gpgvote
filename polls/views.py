@@ -384,7 +384,9 @@ def results(request, poll_id):
       raise Http404
 
   username = request.user.username
-  if ((not poll.is_allowed_voter(username)) and (poll.creator != request.user)) or (poll.ends > datetime.datetime.now()):
+  # Creator can always see the results (before finish), voters can only see
+  # results after poll has completed, non-voters can never see the results.
+  if ((not poll.is_allowed_voter(username)) and (poll.creator != request.user)) or (poll.is_allowed_voter(username) and (poll.creator != request.user) and (poll.ends > datetime.datetime.now())):
       return HttpResponseRedirect('/mypolls')
 
   total_abstention = False
