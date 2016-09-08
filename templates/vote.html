@@ -12,7 +12,7 @@
          <tr><td colspan="2" height="10"></td></tr>
          {% for choice in choices %}
            <tr>
-             <td>{{ choice.choice }}</td>
+             <td>{{ choice.choice|safe }}</td>
              <td>
                <input type="{{ choice_type }}" name="choices" id="{{ choice.id }}" value="{{ choice.id }}" 
                       onchange="checkChoices('{{ choice.id }}', {{ poll.max_choices }})"/>
