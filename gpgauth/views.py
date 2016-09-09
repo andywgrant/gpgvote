@@ -49,7 +49,6 @@ def batch_key_import(gpg, keyfile):
 
   return error, None
 
-
 def key_import(gpg, keyfile):
   if keyfile.size > 100000: # accept files of a normal size
     error = 'Key file size is too big'

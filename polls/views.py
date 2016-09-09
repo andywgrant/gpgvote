@@ -510,5 +510,3 @@ def voters_list(request, poll_id):
                                   'poll': poll,
                                 'voters': voters,
                              'logged_in': logged_in }, context_instance = RequestContext(request))
-
-
