@@ -27,6 +27,28 @@ def delete_keys(gpg, fingerprints, del_existed=False):
     except ObjectDoesNotExist:
       gpg.delete_keys(fp)
 
+def batch_key_import(gpg, keyfile):
+  if keyfile.size > 1000000: # accept files of a normal size
+    error = 'Key file size is too big'
+  else:
+    error = ''
+    try:
+      import_result = gpg.import_keys(keyfile.read())
+    except UnicodeDecodeError:
+      error = 'There was an error in importing your key'
+      return error, None
+
+    if import_result.count == 0:
+      error = 'There was an error in importing your key'
+
+    if import_result.count > 1: # accept multi-key files
+      keys = []
+      for fp in import_result.fingerprints:
+        keys.append(gpg.get_key(fp))
+      return error, keys
+
+  return error, None
+
 
 def key_import(gpg, keyfile):
   if keyfile.size > 100000: # accept files of a normal size
@@ -114,6 +136,48 @@ def register(request):
     form = RegisterForm()
 
   return render_to_response('register.html',
+         {    'form': form,
+             'error': error,
+           'success': success }, context_instance = RequestContext(request))
+
+def batch_import(request):
+  if not request.user.is_authenticated():
+    return HttpResponseRedirect('/')
+  gpg = GPG(gpgbinary=settings.GNUPGBINARY, gnupghome=settings.GNUPGHOME)
+  key = gpg.get_key(request.user.pgpkey.fingerprint)
+  if not key['ownertrust'] in settings.CREATE_POLLS:
+    return HttpResponseRedirect('/')
+
+  error = ''
+  success = ''
+  if request.POST:
+    form = RegisterForm(request.POST, request.FILES)
+    if form.is_valid():
+      keyfile = request.FILES['keyfile']
+      gpg = GPG(gpgbinary=settings.GNUPGBINARY, gnupghome=settings.GNUPGHOME)
+      (error, imported_keys) = batch_key_import(gpg, keyfile)
+      if not error:
+         for imported_key in imported_keys:
+             # check for user existance in database to accept registration only for new users
+             try:
+                 user = User.objects.get(email = imported_key['email'])
+                 error += '\nUser \'%s\' is already registered' % imported_key['email']
+                 if user.pgpkey.fingerprint != imported_key['fingerprint']:
+                     delete_keys(gpg, imported_key['fingerprint'])
+             except ObjectDoesNotExist:
+                 newuser = User.objects.create_user(username = imported_key['email'],
+                                                         email = imported_key['email'],
+                                                     password = '')
+                 newuser.set_unusable_password()
+                 newuser.save()
+                 pgpkey = PGPkey(user = newuser, name = imported_key['name'], fingerprint = imported_key['fingerprint'])
+                 pgpkey.save()
+                 success += '\nUser \'%s\' is now registered' % imported_key['email']
+
+  else:
+    form = RegisterForm()
+
+  return render_to_response('batch_import.html',
          {    'form': form,
              'error': error,
            'success': success }, context_instance = RequestContext(request))

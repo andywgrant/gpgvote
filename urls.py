@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^$', views.main),
     url(r'^userinfo/(?P<user_id>\d+)/$', views.userinfo),
     url(r'^register/$', gpgauth.views.register),
+    url(r'^batch_import/$', gpgauth.views.batch_import),
     url(r'^renew/(?P<username>.*)$', gpgauth.views.renew),
     url(r'^login/$', gpgauth.views.login_view),
     url(r'^logout/$', gpgauth.views.logout_view),

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Import{% endblock %}
+
+{% block content %}
+      <div style="text-align:center">
+      <h2>Batch Import:</h2>
+      <p>Please, upload your keyfile.</p>
+      {% if not success %}
+      {% if error %}<p style="color:red"><b>Error:</b> {{ error|linebreaksbr }}</p>{% endif %}
+      <form enctype="multipart/form-data" action="/batch_import/" method="post">
+        {% csrf_token %}
+        <b>{{ form.as_p }}</b>
+        <input style="font-weight:bold;font-size:large" type="submit" value="Import" />
+      </form>
+      {% endif %}
+      {% if success %}
+      <p><b>Success:</b> {{ success|linebreaksbr }}</p>
+      {% endif %}
+      </div>
+{% endblock %} 
