@@ -142,6 +142,8 @@ def register(request):
 def batch_import(request):
   if not request.user.is_authenticated():
     return HttpResponseRedirect('/')
+  else:
+    logged_in = True
   gpg = GPG(gpgbinary=settings.GNUPGBINARY, gnupghome=settings.GNUPGHOME)
   key = gpg.get_key(request.user.pgpkey.fingerprint)
   if not key['ownertrust'] in settings.CREATE_POLLS:
