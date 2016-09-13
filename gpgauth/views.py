@@ -181,7 +181,8 @@ def batch_import(request):
   return render_to_response('batch_import.html',
          {    'form': form,
              'error': error,
-           'success': success }, context_instance = RequestContext(request))
+           'success': success,
+           'logged_in': logged_in}, context_instance = RequestContext(request))
 
 
 def renew(request, username):
